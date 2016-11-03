@@ -1,1 +1,3 @@
 # Hello-word
+Hi there, I am Seven Sun. First time to use GitHub. I am figuring out how it works....
+And it is another one.
