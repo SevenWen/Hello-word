@@ -4,7 +4,7 @@ from asyncio import *
 from playground.asyncio_lib.testing import TestLoopEx
 from playground.network.testing import MockTransportToStorageStream
 from playground.network.testing import MockTransportToProtocol
-from enum import Enum
+
 
 class GetDeviceList(PacketType):
     DEFINITION_IDENTIFIER = "lab2b.zli.getdevicelist"
@@ -45,6 +45,11 @@ class Respond(PacketType):
 
 
 class IoTServerProtocol(Protocol):
+    initial = 0
+    wtmodifypkt = 1
+    end =2
+    ERROR = 9
+
     def __init__(self):
         self.transport = None
         self.state = None
@@ -53,9 +58,9 @@ class IoTServerProtocol(Protocol):
 
 
     def connection_made(self, transport):
-        print("---Server connected to the client---")
+        print("---Server connected!---")
         self.transport = transport
-        self.state = "initial"
+        self.state = self.initial
 
 
     def data_received(self, data):
@@ -63,35 +68,30 @@ class IoTServerProtocol(Protocol):
         self._deserializer.update(data)
         for pkt in self._deserializer.nextPackets():
             if isinstance(pkt, GetDeviceList):
-                if self.state == "initial":
+                if self.state == self.initial:
                     print("Server: Received a GetDeviceList request!")
                     self.RespondPacket = DeviceList()
                     self.RespondPacket.ID = pkt.number
                     self.RespondPacket.category = pkt.category
-                    self.state = "wait modify packet"
+                    self.state = self.wtmodifypkt
                 else:
-                    print("state error E01")
-                    self.state = "E01"
-                    self.loop.stop()
+                    print("state error")
+                    self.state = self.ERROR
             elif isinstance(pkt, ModifyDevice):
-                if self.state == "wait modify packet":
+                if self.state == self.wtmodifypkt:
                     print("Server: Received a ModifyDevice request!")
                     self.RespondPacket = Respond()
                     self.RespondPacket.ID = pkt.ID
-                    self.state = "end"
-                elif self.state == "initial":
-                    print("state error E02")
-                    self.state == "E02"
-                    self.loop.stop()
+                    self.state = self.end
                 else:
-                    self.state == "E01"
-                    self.loop.stop()
+                    self.state == self.ERROR
             else:
                 print("received error packet")
-                self.state = "end"
+                self.state = self.end
 
 
     def DeviceList(self):
+        print("Server State: {!r}".format(self.state))
         if (self.RespondPacket.category == "lamp" and self.RespondPacket.ID == 1001):
             self.RespondPacket.name = b"table lamp"
             self.RespondPacket.status = b"on"
@@ -102,22 +102,23 @@ class IoTServerProtocol(Protocol):
             self.RespondPacket.name = b"MacBook"
             self.RespondPacket.status = b"on"
         else:
-            self.RespondPacket.name = b"Can not find this device"
+            self.RespondPacket.name = b"Error"
             self.RespondPacket.status = b"None"
+        print("Server: Send DeviceList   ID:{}".format(self.RespondPacket.ID) + "\n")
         self.transport.write(self.RespondPacket.__serialize__())
 
+
     def Respond(self):
+        print("Server State: {!r}".format(self.state))
         if (self.RespondPacket.ID == 1001):
             self.RespondPacket.respond = b"Succeeded!"
-        elif (self.RespondPacket.ID == 1001):
-            self.RespondPacket.respond = b"Failed! Already on!"
         elif (self.RespondPacket.ID == 1002):
             self.RespondPacket.respond = b"Failed!"
-        elif (self.RespondPacket.ID == 1003):
+        elif (self.RespondPacket.ID == 2001):
             self.RespondPacket.respond = b"Succeeded!"
         else:
             self.RespondPacket.respond = b"Error!Can not find this device!"
-
+        print("Server: Send Response packet:{}".format(self.RespondPacket.respond) + "\n")
         self.transport.write(self.RespondPacket.__serialize__())
 
     def connection_lost(self, exc):
@@ -126,6 +127,10 @@ class IoTServerProtocol(Protocol):
 
 
 class IoTClientProtocol(Protocol):
+    initial = 0
+    wtrespond = 1
+    end = 2
+    ERROR = 9
     def __init__(self):
         self.transport = None
         self.state = None
@@ -133,44 +138,42 @@ class IoTClientProtocol(Protocol):
         self._deserializer = PacketType.Deserializer()
 
     def connection_made(self, transport):
-        print("---Client connected---")
+        print("---Client connected!---")
         self.transport = transport
-        self.state = "initial"
+        self.state = self.initial
 
     def data_received(self, data):
         print("---Client received data---")
         self._deserializer.update(data)
         for pkt in self._deserializer.nextPackets():
             if isinstance(pkt, DeviceList):
-                if self.state == "initial":
-                    print("Client: Received a DeviceList!")
+                if self.state == self.initial:
+                    print("Client: Received a DeviceList")
                     self.RespondPacket = ModifyDevice()
                     self.RespondPacket.ID = pkt.ID
-                    self.state = "wait respond packet"
+                    self.state = self.wtrespond
                 else:
-                    print("state error E01")
-                    self.state = "E01"
-                    self.loop.stop()
+                    print("state error")
+                    self.state = self.ERROR
             elif isinstance(pkt, Respond):
-                if self.state == "wait respond packet":
+                if self.state == self.wtrespond:
                     print("Client: Received a respond message!")
                     if (pkt.respond == b"Succeeded!"):
                         print("Congratulations! Operation Succeeded!")
                     elif (pkt.respond == b"Failed!"):
                         print("Operation Failed!")
-                    self.state = "end"
-                elif self.state == "initial":
-                    print("state error E02")
-                    self.state == "E02"
-                    self.loop.stop()
+                    self.state = self.end
                 else:
-                    self.state == "E01"
-                    self.loop.stop()
+                    self.state == self.ERROR
+                print("Client State: {!r}".format(self.state))
             else:
                 print("received error packet")
-                self.state = "end"
+                self.state = self.end
+
+
 
     def ModifyDevice(self):
+        print("Client State: {!r}".format(self.state))
         if (self.RespondPacket.ID == 1001):
             self.RespondPacket.operation = b"off"
         elif (self.RespondPacket.ID == 1002):
@@ -179,13 +182,18 @@ class IoTClientProtocol(Protocol):
             self.RespondPacket.operation = b"off"
         else:
             self.RespondPacket.operation = b"Can not identify device"
+        print("Client: Sent ModifyDevice packet  ID:{}".format(self.RespondPacket.ID) + "\n")
         self.transport.write(self.RespondPacket.__serialize__())
 
     def GetDeviceList(self):
+        print("Test start!")
+        print("Client State: {!r}".format(self.state))
         self.RespondPacket = GetDeviceList()
         self.RespondPacket.category = "lamp"
         self.RespondPacket.number = 1001
+        print("Client: Sent GetDeviceList packet  ID:{}".format(self.RespondPacket.number)+"\n")
         self.transport.write(self.RespondPacket.__serialize__())
+
 
     def connection_lost(self, exc):
         self.transport = None
