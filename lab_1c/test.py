@@ -88,6 +88,8 @@ class IoTServerProtocol(Protocol):
             else:
                 print("received error packet")
                 self.state = self.end
+            '''if (self.state == self.end or self.state == self.ERROR):
+                self.transport.close()'''
 
 
     def DeviceList(self):
@@ -194,7 +196,6 @@ class IoTClientProtocol(Protocol):
         print("Client: Sent GetDeviceList packet  ID:{}".format(self.RespondPacket.number)+"\n")
         self.transport.write(self.RespondPacket.__serialize__())
 
-
     def connection_lost(self, exc):
         self.transport = None
         print("IoT Server Connection Lost because {}".format(exc))
@@ -203,16 +204,18 @@ def BasicUnitTest():
     set_event_loop(TestLoopEx())
     client = IoTClientProtocol()
     server = IoTServerProtocol()
-    transportToServer = MockTransportToProtocol(server)
-    transportToClient = MockTransportToProtocol(client)
-    server.connection_made(transportToClient)
+    transportToServer = MockTransportToProtocol(myProtocol=client)
+    transportToClient = MockTransportToProtocol(myProtocol=server)
+    transportToServer.setRemoteTransport(transportToClient)
+    transportToClient.setRemoteTransport(transportToServer)
+
     client.connection_made(transportToServer)
+    server.connection_made(transportToClient)
 
     client.GetDeviceList()
     server.DeviceList()
     client.ModifyDevice()
     server.Respond()
-
 
 if __name__=="__main__":
     BasicUnitTest()
