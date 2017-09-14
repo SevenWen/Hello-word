@@ -3,9 +3,7 @@ from playground.network.packet import PacketType
 from playground.network.packet.fieldtypes import UINT32, STRING, BUFFER
 from playground.network.devices.vnic import connect
 from asyncio import *
-from playground.asyncio_lib.testing import TestLoopEx
-from playground.network.testing import MockTransportToStorageStream
-from playground.network.testing import MockTransportToProtocol
+
 
 
 class GetDeviceList(PacketType):
@@ -93,6 +91,11 @@ class IoTServerProtocol(asyncio.Protocol):
             else:
                 print("received error packet")
                 self.state = self.end
+
+            if self.state == self.end:
+                self.transport.close()
+            elif self.state == self.ERROR:
+                self.transport.close()
 
 
     def DeviceList(self):
