@@ -88,8 +88,6 @@ class IoTServerProtocol(Protocol):
             else:
                 print("received error packet")
                 self.state = self.end
-            '''if (self.state == self.end or self.state == self.ERROR):
-                self.transport.close()'''
 
 
     def DeviceList(self):
