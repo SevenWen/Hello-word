@@ -200,6 +200,8 @@ class IoTClientProtocol(Protocol):
         self.transport = None
         print("IoT Server Connection Lost because {}".format(exc))
 
+
+
 def BasicUnitTest():
     set_event_loop(TestLoopEx())
     client = IoTClientProtocol()
