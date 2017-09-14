@@ -138,6 +138,7 @@ class IoTServerProtocol(asyncio.Protocol):
 
 if __name__=='__main__':
     loop = get_event_loop()
+    loop.set_debug(enabled=True)
     coro = playground.getConnector().create_playground_server(lambda:IoTServerProtocol(),5555)
     server= loop.run_until_complete(coro)
     loop.run_forever()

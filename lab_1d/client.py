@@ -59,7 +59,6 @@ class IoTClientProtocol(asyncio.Protocol):
         print("---Client connected!---")
         self.transport = transport
         self.state = self.initial
-        self.GetDeviceList()
 
     def data_received(self, data):
         print("---Client received data---")
@@ -123,8 +122,9 @@ class IoTClientProtocol(asyncio.Protocol):
 
 if __name__=='__main__':
     loop = get_event_loop()
+    loop.set_debug(enabled=True)
     connect = playground.getConnector().create_playground_connection (lambda:IoTClientProtocol(), '20174.1.1.1', 5555)
     transport, client = loop.run_until_complete(connect)
-    #client.GetDeviceList()
+    client.GetDeviceList()
     loop.run_forever()
     loop.close()
