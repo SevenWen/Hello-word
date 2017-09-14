@@ -118,8 +118,6 @@ class IoTClientProtocol(asyncio.Protocol):
         print("IoT Server Connection Lost because {}".format(exc))
 
 
-
-
 if __name__=='__main__':
     loop = get_event_loop()
     loop.set_debug(enabled=True)
