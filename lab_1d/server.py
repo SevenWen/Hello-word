@@ -77,6 +77,7 @@ class IoTServerProtocol(asyncio.Protocol):
                     self.RespondPacket.category = pkt.category
                     self.DeviceList()
                     self.state = self.wtmodifypkt
+
                 else:
                     print("state error")
                     self.state = self.ERROR
@@ -85,6 +86,7 @@ class IoTServerProtocol(asyncio.Protocol):
                     print("Server: Received a ModifyDevice request!")
                     self.RespondPacket = Respond()
                     self.RespondPacket.ID = pkt.ID
+                    self.Respond()
                     self.state = self.end
                 else:
                     self.state == self.ERROR
@@ -131,22 +133,12 @@ class IoTServerProtocol(asyncio.Protocol):
 
 
 
-'''#logging.basicConfig(level=logging.DEBUG)
-loop = asyncio.get_event_loop()
-loop.set_debug(1)
-coro = connect.getConnector().create_playground_server(IoTServerProtocol,1234)
-server = loop.run_until_complete(coro)
-loop.run_forever()
-
-server.close()
-loop.run_until_complete(server.wait_closed())
-loop.close()'''
 
 
 
 if __name__=='__main__':
     loop = get_event_loop()
-    coro = playground.getConnector().create_playground_server(lambda:IoTServerProtocol(),8000)
+    coro = playground.getConnector().create_playground_server(lambda:IoTServerProtocol(),5555)
     server= loop.run_until_complete(coro)
     loop.run_forever()
     server.close()

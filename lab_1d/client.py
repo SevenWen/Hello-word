@@ -69,6 +69,7 @@ class IoTClientProtocol(asyncio.Protocol):
                     print("Client: Received a DeviceList")
                     self.RespondPacket = ModifyDevice()
                     self.RespondPacket.ID = pkt.ID
+                    self.ModifyDevice()
                     self.state = self.wtrespond
                 else:
                     print("state error")
@@ -121,7 +122,7 @@ class IoTClientProtocol(asyncio.Protocol):
 
 if __name__=='__main__':
     loop = get_event_loop()
-    connect = playground.getConnector().create_playground_connection (lambda:IoTClientProtocol(), '20174.1.1.1', 8000)
+    connect = playground.getConnector().create_playground_connection (lambda:IoTClientProtocol(), '20174.1.1.1', 5555)
     transport, client = loop.run_until_complete(connect)
     client.GetDeviceList()
     loop.run_forever()
