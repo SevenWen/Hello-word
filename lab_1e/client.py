@@ -88,8 +88,12 @@ class IoTClientProtocol(asyncio.Protocol):
 if __name__=='__main__':
     loop = get_event_loop()
     loop.set_debug(enabled=True)
-    #connect = playground.getConnector().create_playground_connection (lambda:IoTClientProtocol(), '20174.1.1.1', 5555)
-    #connect = playground.getConnector(‘passthrough’).create_playground_connection (lambda:IoTClientProtocol(), '20174.1.1.1', 5555)
+
+    f = StackingProtocolFactory(lambda: PassThrough1(), lambda: PassThrough2())
+    ptConnector = playground.Connector(protocolStack=f)
+    playground.setConnector('passthrough', ptConnector)
+
+    connect = playground.getConnector('passthrough').create_playground_connection (lambda:IoTClientProtocol(), '20174.1.1.1', 5555)
     transport, client = loop.run_until_complete(connect)
     client.GetDeviceList()
     loop.run_forever()

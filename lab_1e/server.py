@@ -104,8 +104,12 @@ if __name__=='__main__':
 
     loop = get_event_loop()
     loop.set_debug(enabled=True)
-   # coro = playground.getConnector().create_playground_server(lambda:IoTServerProtocol(),5555)
-   # coro = playground.getConnector(‘passthrough’).create_playground_server(lambda:IoTServerProtocol(),5555)
+
+    f = StackingProtocolFactory(lambda: PassThrough1(), lambda: PassThrough2())
+    ptConnector = playground.Connector(protocolStack=f)
+    playground.setConnector('passthrough', ptConnector)
+
+    coro = playground.getConnector('passthrough').create_playground_server(lambda:IoTServerProtocol(),5555)
     server= loop.run_until_complete(coro)
     loop.run_forever()
     server.close()
