@@ -7,7 +7,8 @@ class PassThrough1(StackingProtocol):
 
     def connection_made(self, transport):
         self.transport = transport
-        self.higherProtocol().connection_made(transport)
+        higherTransport = StackingTransport(self.transport)
+        self.higherProtocol().connection_made(higherTransport)
         print("PassThrough1 connection made")
 
     def data_received(self, data):
@@ -24,7 +25,8 @@ class PassThrough2(StackingProtocol):
 
     def connection_made(self, transport):
         self.transport = transport
-        self.higherProtocol().connection_made(transport)
+        higherTransport = StackingTransport(self.transport)
+        self.higherProtocol().connection_made(higherTransport)
         print("PassThrough2 connection made")
 
     def data_received(self, data):
